@@ -1,0 +1,23 @@
+# ==============================================================================
+# ArShab Surgical — robots.txt
+# https://arshabsurgicals.com
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /products/*
+Allow: /categories
+Allow: /categories/*
+Allow: /about
+Allow: /quality
+Allow: /contact
+
+# Disallow private administration portal
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /admin/login
+Disallow: /admin/slides
+
+# Sitemap Location
+Sitemap: https://arshabsurgicals.com/sitemap.xml
