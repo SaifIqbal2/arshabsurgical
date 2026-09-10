@@ -107,7 +107,7 @@ export default function SEO({
         image: DEFAULT_OG_IMAGE,
         description: DEFAULT_DESC,
         telephone: '+92-319-7613502',
-        email: 'info@arshabsurgical.com',
+        email: 'arshabsurgicals@gmail.com',
         priceRange: '$$',
         address: {
           '@type': 'PostalAddress',

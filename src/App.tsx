@@ -112,7 +112,7 @@ function TopBar() {
           <ul>
             <li>
               <Mail size={14} color="#108185" />
-              <a href="mailto:info@arshabsurgical.com">EMAIL : info@arshabsurgical.com</a>
+              <a href="mailto:arshabsurgicals@gmail.com">EMAIL : arshabsurgicals@gmail.com</a>
             </li>
             <li>
               <Phone size={14} color="#108185" />
@@ -1257,8 +1257,7 @@ function ContactPage() {
           <div style={{ marginBottom: '28px' }}>
             <strong style={{ display: 'block', fontSize: '13px', color: 'var(--sq-teal)', textTransform: 'uppercase', marginBottom: '4px' }}>Email Inquiries:</strong>
             <p style={{ fontSize: '14px' }}>
-              <a href="mailto:info@arshabsurgical.com" style={{ color: 'var(--sq-teal)' }}>info@arshabsurgical.com</a><br />
-              <a href="mailto:hello@arshabsurgical.com" style={{ color: 'var(--sq-teal)' }}>hello@arshabsurgical.com</a>
+              <a href="mailto:arshabsurgicals@gmail.com" style={{ color: 'var(--sq-teal)' }}>arshabsurgicals@gmail.com</a>
             </p>
           </div>
           <a href={whatsappUrl()} target="_blank" rel="noreferrer" style={{ backgroundColor: '#25D366', color: '#fff', padding: '12px 24px', borderRadius: '3px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontFamily: 'var(--font-serif)', textTransform: 'uppercase', fontSize: '13px' }}>
@@ -1368,7 +1367,7 @@ function Footer({ categories }: { categories: Category[] }) {
                 <div className="contact-body">
                   <h5>Email</h5>
                   <p>
-                    <a href="mailto:info@arshabsurgical.com">info@arshabsurgical.com</a>
+                    <a href="mailto:arshabsurgicals@gmail.com">arshabsurgicals@gmail.com</a>
                   </p>
                 </div>
               </div>
