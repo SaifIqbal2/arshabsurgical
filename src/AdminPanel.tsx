@@ -30,6 +30,7 @@ type Category = {
   slug: string
   description: string | null
   image_url: string | null
+  sort_order?: number
 }
 
 type Product = {
@@ -110,6 +111,7 @@ type CategoryForm = {
   slug: string
   description: string
   image_url: string
+  sort_order: number
 }
 
 type SlideForm = {
@@ -155,7 +157,8 @@ const blankCategory: CategoryForm = {
   name: '',
   slug: '',
   description: '',
-  image_url: ''
+  image_url: '',
+  sort_order: 0
 }
 
 const blankSlide: SlideForm = {
@@ -198,22 +201,38 @@ export default function AdminPanel() {
 
   async function loadData() {
     setLoading(true)
-    const [productsResult, categoriesResult, slidesResult, inquiriesResult] = await Promise.all([
+    let loadedCategories: Category[] = []
+    try {
+      const catRes = await supabase
+        .from('categories')
+        .select('id, name, slug, description, image_url, sort_order')
+        .order('sort_order', { ascending: true })
+        .order('name')
+      if (catRes.data && !catRes.error) {
+        loadedCategories = catRes.data as Category[]
+      } else {
+        const fb = await supabase.from('categories').select('id, name, slug, description, image_url').order('name')
+        loadedCategories = (fb.data ?? []) as Category[]
+      }
+    } catch {
+      const fb = await supabase.from('categories').select('id, name, slug, description, image_url').order('name')
+      loadedCategories = (fb.data ?? []) as Category[]
+    }
+
+    const [productsResult, slidesResult, inquiriesResult] = await Promise.all([
       supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false }),
-      supabase.from('categories').select('id, name, slug, description, image_url').order('name'),
       supabase.from('hero_slides').select('*').order('sort_order', { ascending: true }),
       supabase.from('inquiries').select('*').order('created_at', { ascending: false })
     ])
 
     if (productsResult.error) setMessage(`Products load error: ${productsResult.error.message}`)
-    if (categoriesResult.error) setMessage(`Categories load error: ${categoriesResult.error.message}`)
     if (slidesResult.error) console.warn('Slides load:', slidesResult.error.message)
 
     setProducts((productsResult.data ?? []) as Product[])
-    setCategories(categoriesResult.data ?? [])
+    setCategories(loadedCategories)
     setSlides((slidesResult.data ?? []) as Slide[])
     setInquiries((inquiriesResult.data ?? []) as Inquiry[])
     setLoading(false)
@@ -442,16 +461,40 @@ export default function AdminPanel() {
     setMessage('')
     setSaving(true)
 
-    const payload = {
+    const payloadWithSort = {
       name: categoryForm.name,
       slug: categoryForm.slug || makeSlug(categoryForm.name),
       description: categoryForm.description,
-      image_url: categoryForm.image_url || null
+      image_url: categoryForm.image_url || null,
+      sort_order: Number(categoryForm.sort_order) || 0
     }
 
-    const result = categoryForm.id
-      ? await supabase.from('categories').update(payload).eq('id', categoryForm.id).select('id')
-      : await supabase.from('categories').insert(payload).select('id')
+    let result = categoryForm.id
+      ? await supabase.from('categories').update(payloadWithSort).eq('id', categoryForm.id).select('id')
+      : await supabase.from('categories').insert(payloadWithSort).select('id')
+
+    if (result.error && (result.error.message.includes('sort_order') || result.error.code === '42703')) {
+      // If sort_order column does not exist yet, fallback saving without sort_order
+      const payloadWithoutSort = {
+        name: categoryForm.name,
+        slug: categoryForm.slug || makeSlug(categoryForm.name),
+        description: categoryForm.description,
+        image_url: categoryForm.image_url || null
+      }
+      result = categoryForm.id
+        ? await supabase.from('categories').update(payloadWithoutSort).eq('id', categoryForm.id).select('id')
+        : await supabase.from('categories').insert(payloadWithoutSort).select('id')
+
+      setSaving(false)
+      if (result.error) {
+        setMessage(`Error saving category: ${result.error.message}`)
+        return
+      }
+      setCategoryForm(null)
+      setMessage('Category saved! (Tip: Run the SQL command in Supabase to enable custom sort order).')
+      await loadData()
+      return
+    }
 
     setSaving(false)
     if (result.error) {
@@ -460,7 +503,7 @@ export default function AdminPanel() {
     }
 
     setCategoryForm(null)
-    setMessage('Category saved successfully.')
+    setMessage('Category saved successfully with sort order!')
     await loadData()
   }
 
@@ -759,56 +802,108 @@ export default function AdminPanel() {
 
         {/* 2. Categories Tab */}
         {tab === 'categories' && (
-          <div className="admin-category-grid">
-            {loading ? (
-              <p>Loading categories from Supabase...</p>
-            ) : categories.length === 0 ? (
-              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#666' }}>
-                No categories created yet. Click "Add New Category" above to create one.
+          <div>
+            <div
+              style={{
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: '6px',
+                padding: '14px 18px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                flexWrap: 'wrap'
+              }}
+            >
+              <div>
+                <p style={{ margin: 0, fontWeight: 700, color: '#166534', fontSize: '13px' }}>
+                  ⚡ Custom Category Sorting &amp; Order Numbers
+                </p>
+                <p style={{ margin: '3px 0 0', color: '#15803d', fontSize: '12px' }}>
+                  Assign an <strong>Order Number</strong> (e.g. 1, 2, 3...) when adding or editing categories to control which category appears first on your website.
+                </p>
               </div>
-            ) : (
-              categories.map(category => (
-                <article className="admin-category-card" key={category.id}>
-                  <div>
-                    {category.image_url ? (
-                      <img src={category.image_url} alt={category.name} className="admin-category-img" />
-                    ) : (
-                      <div className="admin-category-img" style={{ display: 'grid', placeItems: 'center', color: '#888' }}>
-                        <ImageIcon size={30} />
+              <button
+                type="button"
+                className="admin-btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 12px', background: '#fff', cursor: 'pointer' }}
+                onClick={() => {
+                  navigator.clipboard.writeText('ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS sort_order integer DEFAULT 0;')
+                  setMessage('Copied SQL: "ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS sort_order integer DEFAULT 0;" — Paste in Supabase SQL Editor.')
+                }}
+              >
+                Copy Supabase SQL
+              </button>
+            </div>
+
+            <div className="admin-category-grid">
+              {loading ? (
+                <p>Loading categories from Supabase...</p>
+              ) : categories.length === 0 ? (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#666' }}>
+                  No categories created yet. Click "Add New Category" above to create one.
+                </div>
+              ) : (
+                categories.map(category => (
+                  <article className="admin-category-card" key={category.id}>
+                    <div>
+                      {category.image_url ? (
+                        <img src={category.image_url} alt={category.name} className="admin-category-img" />
+                      ) : (
+                        <div className="admin-category-img" style={{ display: 'grid', placeItems: 'center', color: '#888' }}>
+                          <ImageIcon size={30} />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span className="status" style={{ fontSize: '10px' }}>
+                          Slug: /{category.slug}
+                        </span>
+                        <span
+                          style={{
+                            background: '#0a3c61',
+                            color: '#ffffff',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '3px 10px',
+                            borderRadius: '12px'
+                          }}
+                        >
+                          Order: #{category.sort_order ?? 0}
+                        </span>
                       </div>
-                    )}
-                    <span className="status" style={{ fontSize: '10px' }}>
-                      Slug: /{category.slug}
-                    </span>
-                    <h2>{category.name}</h2>
-                    <p>{category.description || 'No description provided.'}</p>
-                  </div>
-                  <div className="row-actions" style={{ marginTop: '16px', borderTop: '1px solid #f0f0f0', paddingTop: '10px' }}>
-                    <button
-                      title="Edit Category"
-                      onClick={() =>
-                        setCategoryForm({
-                          id: category.id,
-                          name: category.name,
-                          slug: category.slug,
-                          description: category.description ?? '',
-                          image_url: category.image_url ?? ''
-                        })
-                      }
-                    >
-                      <Edit3 size={16} /> Edit
-                    </button>
-                    <button
-                      title="Delete Category"
-                      className="btn-delete"
-                      onClick={() => void deleteCategory(category)}
-                    >
-                      <Trash2 size={16} /> Delete
-                    </button>
-                  </div>
-                </article>
-              ))
-            )}
+                      <h2>{category.name}</h2>
+                      <p>{category.description || 'No description provided.'}</p>
+                    </div>
+                    <div className="row-actions" style={{ marginTop: '16px', borderTop: '1px solid #f0f0f0', paddingTop: '10px' }}>
+                      <button
+                        title="Edit Category"
+                        onClick={() =>
+                          setCategoryForm({
+                            id: category.id,
+                            name: category.name,
+                            slug: category.slug,
+                            description: category.description ?? '',
+                            image_url: category.image_url ?? '',
+                            sort_order: category.sort_order ?? 0
+                          })
+                        }
+                      >
+                        <Edit3 size={16} /> Edit
+                      </button>
+                      <button
+                        title="Delete Category"
+                        className="btn-delete"
+                        onClick={() => void deleteCategory(category)}
+                      >
+                        <Trash2 size={16} /> Delete
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
           </div>
         )}
 
@@ -1515,21 +1610,41 @@ export default function AdminPanel() {
             <p className="eyebrow">CATEGORY MANAGEMENT</p>
             <h2>{categoryForm.id ? 'Edit Category' : 'Add New Category'}</h2>
 
-            <label>
-              Category Name *
-              <input
-                value={categoryForm.name}
-                onChange={e =>
-                  setCategoryForm({
-                    ...categoryForm,
-                    name: e.target.value,
-                    slug: categoryForm.id ? categoryForm.slug : makeSlug(e.target.value)
-                  })
-                }
-                placeholder="e.g. Surgical Instruments"
-                required
-              />
-            </label>
+            <div className="admin-two-col">
+              <label>
+                Category Name *
+                <input
+                  value={categoryForm.name}
+                  onChange={e =>
+                    setCategoryForm({
+                      ...categoryForm,
+                      name: e.target.value,
+                      slug: categoryForm.id ? categoryForm.slug : makeSlug(e.target.value)
+                    })
+                  }
+                  placeholder="e.g. Surgical Instruments"
+                  required
+                />
+              </label>
+
+              <label>
+                Display Order / Sort Number *
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={categoryForm.sort_order ?? 0}
+                  onChange={e =>
+                    setCategoryForm({
+                      ...categoryForm,
+                      sort_order: parseInt(e.target.value, 10) || 0
+                    })
+                  }
+                  placeholder="1 = First, 2 = Second, 3 = Third..."
+                  required
+                />
+              </label>
+            </div>
 
             <label>
               URL Slug *

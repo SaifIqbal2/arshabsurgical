@@ -46,6 +46,7 @@ export type Category = {
   count?: string
   image: string
   description?: string | null
+  sort_order?: number
 }
 
 export type BasketItem = {
@@ -1545,10 +1546,30 @@ function App() {
   useEffect(() => {
     async function loadData() {
       try {
-        const { data: catData } = await supabase
-          .from('categories')
-          .select('id, name, slug, description, image_url')
-          .order('name')
+        let catData: any[] | null = null
+        try {
+          const { data: sortedData, error: sortErr } = await supabase
+            .from('categories')
+            .select('id, name, slug, description, image_url, sort_order')
+            .order('sort_order', { ascending: true })
+            .order('name')
+
+          if (!sortErr && sortedData) {
+            catData = sortedData
+          } else {
+            const { data: fallbackData } = await supabase
+              .from('categories')
+              .select('id, name, slug, description, image_url')
+              .order('name')
+            catData = fallbackData
+          }
+        } catch {
+          const { data: fallbackData } = await supabase
+            .from('categories')
+            .select('id, name, slug, description, image_url')
+            .order('name')
+          catData = fallbackData
+        }
 
         if (catData && catData.length > 0) {
           const formattedCategories: Category[] = catData.map(c => ({
@@ -1557,8 +1578,10 @@ function App() {
             slug: c.slug || c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             description: c.description,
             count: 'Explore range',
-            image: publicImageUrl(c.image_url)
+            image: publicImageUrl(c.image_url),
+            sort_order: c.sort_order ?? 0
           }))
+          formattedCategories.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
           setCategoryList(formattedCategories)
         } else {
           setCategoryList([])
