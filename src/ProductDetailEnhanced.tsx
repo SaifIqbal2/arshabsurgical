@@ -418,32 +418,7 @@ export default function ProductDetailEnhanced({
                 </a>
               </div>
 
-              {/* Quick Specification Highlights */}
-              <div className="pd-quick-specs">
-                <h3 className="pd-quick-title">Instrument Quick Reference</h3>
-                <div className="pd-quick-table">
-                  <div className="pd-quick-row">
-                    <span className="pd-label">Discipline</span>
-                    <span className="pd-val">{product.category}</span>
-                  </div>
-                  <div className="pd-quick-row">
-                    <span className="pd-label">Article Number</span>
-                    <span className="pd-val">ART# {product.sku}</span>
-                  </div>
-                  <div className="pd-quick-row">
-                    <span className="pd-label">Material Grade</span>
-                    <span className="pd-val">AISI 410 / 420 Surgical Stainless Steel</span>
-                  </div>
-                  <div className="pd-quick-row">
-                    <span className="pd-label">Certification</span>
-                    <span className="pd-val">ISO 9001:2015 · ISO 13485:2016 · CE</span>
-                  </div>
-                  <div className="pd-quick-row">
-                    <span className="pd-label">Availability</span>
-                    <span className="pd-val pd-in-stock">In Stock / Custom OEM Available</span>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Shipping & Assurance strip */}
               <div className="pd-shipping-strip">
