@@ -802,43 +802,7 @@ export default function AdminPanel() {
 
         {/* 2. Categories Tab */}
         {tab === 'categories' && (
-          <div>
-            <div
-              style={{
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: '6px',
-                padding: '14px 18px',
-                marginBottom: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                flexWrap: 'wrap'
-              }}
-            >
-              <div>
-                <p style={{ margin: 0, fontWeight: 700, color: '#166534', fontSize: '13px' }}>
-                  ⚡ Custom Category Sorting &amp; Order Numbers
-                </p>
-                <p style={{ margin: '3px 0 0', color: '#15803d', fontSize: '12px' }}>
-                  Assign an <strong>Order Number</strong> (e.g. 1, 2, 3...) when adding or editing categories to control which category appears first on your website.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="admin-btn-secondary"
-                style={{ fontSize: '12px', padding: '6px 12px', background: '#fff', cursor: 'pointer' }}
-                onClick={() => {
-                  navigator.clipboard.writeText('ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS sort_order integer DEFAULT 0;')
-                  setMessage('Copied SQL: "ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS sort_order integer DEFAULT 0;" — Paste in Supabase SQL Editor.')
-                }}
-              >
-                Copy Supabase SQL
-              </button>
-            </div>
-
-            <div className="admin-category-grid">
+          <div className="admin-category-grid">
               {loading ? (
                 <p>Loading categories from Supabase...</p>
               ) : categories.length === 0 ? (
@@ -904,7 +868,6 @@ export default function AdminPanel() {
                 ))
               )}
             </div>
-          </div>
         )}
 
         {/* 3. Hero Slides Tab */}
