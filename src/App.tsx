@@ -758,54 +758,26 @@ function HomePage({
       <section className="cate_main">
         <div className="container">
           {categories.length > 0 ? (
-            <div className="cate_seq_wrap">
-              {/* Top Row: Exactly 3 Categories */}
-              <div className="cate_row_top">
-                {categories.slice(0, 3).map(cat => (
-                  <Link
-                    key={cat.id}
-                    to={`/categories/${cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                    className="inner_cate"
-                  >
-                    <div className="cate-img">
-                      <img src={cat.image} alt={cat.name} loading="lazy" />
+            <div className="cate_grid">
+              {categories.map(cat => (
+                <Link
+                  key={cat.id}
+                  to={`/categories/${cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                  className="inner_cate"
+                >
+                  <div className="cate-img">
+                    <img src={cat.image} alt={cat.name} loading="lazy" />
+                  </div>
+                  <div className="cate-name">
+                    <h2>{cat.name}</h2>
+                    <div className="icon_class">
+                      <span>
+                        <ChevronRight size={22} />
+                      </span>
                     </div>
-                    <div className="cate-name">
-                      <h2>{cat.name}</h2>
-                      <div className="icon_class">
-                        <span>
-                          <ChevronRight size={22} />
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              {/* Bottom Row: 4 Categories */}
-              {categories.length > 3 && (
-                <div className="cate_row_bottom">
-                  {categories.slice(3).map(cat => (
-                    <Link
-                      key={cat.id}
-                      to={`/categories/${cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                      className="inner_cate"
-                    >
-                      <div className="cate-img">
-                        <img src={cat.image} alt={cat.name} loading="lazy" />
-                      </div>
-                      <div className="cate-name">
-                        <h2>{cat.name}</h2>
-                        <div className="icon_class">
-                          <span>
-                            <ChevronRight size={22} />
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
+                  </div>
+                </Link>
+              ))}
             </div>
           ) : (
             <div className="catalog-empty-box">
